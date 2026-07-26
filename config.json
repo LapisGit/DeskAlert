@@ -1,0 +1,22 @@
+{
+  "alertSound": {
+    "enabled": true,
+    "minorPath": "",
+    "moderatePath": "",
+    "severePath": ""
+  },
+  "locations": {
+    "us_same": [],
+    "ca_capcp": []
+  },
+  "alertColors": {
+    "minor": "#FFD700",
+    "moderate": "#FF8C00",
+    "severe": "#FF0000"
+  },
+  "severities": {
+    "minor": true,
+    "moderate": true,
+    "severe": true
+  }
+}
