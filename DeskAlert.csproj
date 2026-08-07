@@ -5,19 +5,44 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-
-    <!-- set qtdir here (qt6)-->
-    <QtDir>/home/lapis/Qt/6.11.1/gcc_64/</QtDir>
-    <QtBridgePackBundledQt>false</QtBridgePackBundledQt>
+    
+    <QtDir Condition="$([MSBuild]::IsOSPlatform('Linux'))">/home/lapis/Qt/6.11.1/gcc_64/</QtDir>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <PackageReference Include="QtGroup.Qt.Bridge.CSharp.win-x64" Version="0.3.*-*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <PackageReference Include="QtGroup.Qt.Bridge.CSharp.linux-x64" Version="0.3.*-*" />
   </ItemGroup>
 
   <ItemGroup>
     <QtResource Include="defaultconfig.json" />
   </ItemGroup>
+
+  <UsingTask TaskName="QtPatchMainCpp"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <MainCppPath ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        if (File.Exists(MainCppPath)) {
+          var content = File.ReadAllText(MainCppPath);
+          const string anchor = "    QGuiApplication app(argc, argv);";
+          if (content.Contains(anchor) && !content.Contains("setQuitOnLastWindowClosed")) {
+            var nl = content.Contains("\r\n") ? "\r\n" : "\n";
+            var patched = content.Replace(anchor,
+                anchor + nl + "    app.setQuitOnLastWindowClosed(false);");
+            File.WriteAllText(MainCppPath, patched);
+          }
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
 
   <Target Name="DeskAlertDeployIcon" AfterTargets="QtBridgeDeploy" Condition="'$(DesignTimeBuild)' != 'true'">
     <Copy SourceFiles="$(ProjectDir)icon.png" DestinationFolder="$(TargetDir)Application" />
@@ -27,7 +52,7 @@
           AfterTargets="QtBridgeGenerate"
           BeforeTargets="QtBridgeBuild"
           Condition="'$(DesignTimeBuild)' != 'true'">
-    <Exec Command="python3 -c &quot;import sys; p=sys.argv[1]; c=open(p).read(); old='    QGuiApplication app(argc, argv);'; new='    QGuiApplication app(argc, argv);\n    app.setQuitOnLastWindowClosed(false);'; c=c.replace(old,new,1) if old in c and 'setQuitOnLastWindowClosed' not in c else c; open(p,'w').write(c)&quot; &quot;$(IntermediateOutputPath)qt/native/source/cpp/main.cpp&quot;" />
+    <QtPatchMainCpp MainCppPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)qt/native/source/cpp/main.cpp" />
   </Target>
 
   <PropertyGroup>
