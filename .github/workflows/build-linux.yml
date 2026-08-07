@@ -1,10 +1,12 @@
 name: Build Linux
 
 on:
-  workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-linux:
@@ -22,7 +24,7 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.11.1'
-          modules: 'qtmultimedia qtwayland'
+          modules: 'qtmultimedia'
           cache: 'true'
 
       - name: Build portable bundle
