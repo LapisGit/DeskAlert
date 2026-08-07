@@ -19,6 +19,17 @@
     <QtResource Include="defaultconfig.json" />
   </ItemGroup>
 
+  <Target Name="DeskAlertDeployIcon" AfterTargets="QtBridgeDeploy" Condition="'$(DesignTimeBuild)' != 'true'">
+    <Copy SourceFiles="$(ProjectDir)icon.png" DestinationFolder="$(TargetDir)Application" />
+  </Target>
+  
+  <Target Name="QtDisableQuitOnLastWindowClosed"
+          AfterTargets="QtBridgeGenerate"
+          BeforeTargets="QtBridgeBuild"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec Command="python3 -c &quot;import sys; p=sys.argv[1]; c=open(p).read(); old='    QGuiApplication app(argc, argv);'; new='    QGuiApplication app(argc, argv);\n    app.setQuitOnLastWindowClosed(false);'; c=c.replace(old,new,1) if old in c and 'setQuitOnLastWindowClosed' not in c else c; open(p,'w').write(c)&quot; &quot;$(IntermediateOutputPath)qt/native/source/cpp/main.cpp&quot;" />
+  </Target>
+
   <PropertyGroup>
     <QtQmlModuleName>DeskAlert</QtQmlModuleName>
   </PropertyGroup>

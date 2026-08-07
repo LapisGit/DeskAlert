@@ -51,6 +51,7 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        Qt.application.quitOnLastWindowClosed = false
         var svc = Qt.createQmlObject('import Application; ConfigService {}', win)
         if (svc.isFirstRun)
             openSettings()
@@ -80,7 +81,7 @@ ApplicationWindow {
     SystemTrayIcon {
         id: trayIcon
         visible: true
-        icon.name: "DeskAlert"
+        icon.source: Qt.resolvedUrl("icon.png")
         tooltip: "DeskAlert"
 
         menu: Menu {

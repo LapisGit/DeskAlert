@@ -11,8 +11,10 @@ public class AlertManager
 {
     private static AlertManager? _instance;
     private readonly NWSProvider _nwsProvider = new();
+    private readonly EcccProvider _ecccProvider = new();
     private readonly HashSet<string> _shownAlerts = new();
     private readonly ConcurrentQueue<NwsAlertItem> _pendingAlerts = new();
+    private readonly DateTime _startupTime = DateTime.UtcNow;
     private System.Threading.Timer? _timer;
 
     [QProperty] public string AlertTitle { get; set; } = "";
@@ -47,19 +49,40 @@ public class AlertManager
 
     private void Poll()
     {
+        var alerts = new List<NwsAlertItem>();
+
         try
         {
-            var alerts = _nwsProvider.GetMatchingAlerts();
-            foreach (var alert in alerts)
-            {
-                var id = alert.Link ?? alert.Title ?? "";
-                if (_shownAlerts.Add(id))
-                    _pendingAlerts.Enqueue(alert);
-            }
+            alerts.AddRange(_nwsProvider.GetMatchingAlerts());
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Poll error: {ex.Message}");
+            Console.WriteLine($"NWS poll error: {ex.Message}");
+        }
+
+        try
+        {
+            alerts.AddRange(_ecccProvider.GetMatchingAlerts());
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ECCC poll error: {ex.Message}");
+        }
+
+        foreach (var alert in alerts)
+        {
+            var id = alert.Link ?? alert.Title ?? "";
+            if (!_shownAlerts.Add(id))
+                continue;
+
+            if (Config.currentConfig.other.ignoreFirstScan
+                && DateTime.TryParse(alert.Updated, out var updatedTime)
+                && updatedTime < _startupTime)
+            {
+                continue;
+            }
+
+            _pendingAlerts.Enqueue(alert);
         }
     }
 
@@ -97,6 +120,11 @@ public class AlertManager
             enabled = cfg.severities.minor;
             AlertColor = cfg.alertColors.minor;
             AlertSoundPath = cfg.alertSound.minorPath;
+        }
+
+        if (!cfg.alertSound.enabled)
+        {
+            AlertSoundPath = "";
         }
 
         if (!enabled)

@@ -7,7 +7,7 @@
   },
   "locations": {
     "SAMECodes": [],
-    "CAPCPCodes": []
+    "Cities": []
   },
   "alertColors": {
     "minor": "#FFD700",
@@ -18,5 +18,8 @@
     "minor": true,
     "moderate": true,
     "severe": true
+  },
+  "other": {
+    "ignoreFirstScan": false
   }
 }

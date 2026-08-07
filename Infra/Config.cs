@@ -48,8 +48,10 @@ public class Config
         currentConfig.alertColors ??= new AlertColors();
         currentConfig.severities ??= new Severities();
         currentConfig.locations ??= new Locations();
+        currentConfig.other ??= new Other();
         currentConfig.locations.SAMECodes ??= new List<string>();
-        currentConfig.locations.CAPCPCodes ??= new List<string>();
+        currentConfig.locations.Cities ??= new List<string>();
+        SaveConfig();
     }
 
     public static void SaveConfig()
@@ -73,6 +75,7 @@ public class ConfigDTO
     [QProperty] public AlertColors alertColors { get; set; }
     [QProperty] public Severities severities { get; set; }
     [QProperty] public Locations locations { get; set; }
+    [QProperty] public Other other { get; set; }
 }
 
 [QmlElement]
@@ -88,7 +91,7 @@ public class AlertSound
 public class Locations
 {
     [QProperty] public List<string> SAMECodes { get; set; }
-    [QProperty] public List<string> CAPCPCodes { get; set; }
+    [QProperty] public List<string> Cities { get; set; }
 }
 
 [QmlElement]
@@ -105,6 +108,12 @@ public class Severities
     [QProperty] public bool minor { get; set; }
     [QProperty] public bool moderate { get; set; }
     [QProperty] public bool severe { get; set; }
+}
+
+[QmlElement]
+public class Other
+{
+    [QProperty] public bool ignoreFirstScan { get; set; }
 }
 
 [QmlElement]
@@ -133,16 +142,26 @@ public class ConfigService
         Config.currentConfig.locations.SAMECodes = ParseCsv(csv);
     }
 
-    public string GetCapcpCodes()
+    public string GetCities()
     {
-        var codes = Config.currentConfig.locations?.CAPCPCodes;
-        if (codes == null || codes.Count == 0) return "";
-        return string.Join(",", codes);
+        var cities = Config.currentConfig.locations?.Cities;
+        if (cities == null || cities.Count == 0) return "";
+        return string.Join(",", cities);
     }
 
-    public void SetCapcpCodes(string csv)
+    public void SetCities(string csv)
     {
-        Config.currentConfig.locations.CAPCPCodes = ParseCsv(csv);
+        Config.currentConfig.locations.Cities = ParseCsv(csv);
+    }
+
+    public string ResolveCity(string city)
+    {
+        var result = EcccCityGeocoder.Resolve(city);
+        if (!result.Success)
+            return "ERR|" + result.Message;
+        return "OK|" + (result.Name ?? city) + "|" +
+               result.Lon.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture) + "," +
+               result.Lat.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     private static List<string> ParseCsv(string csv)

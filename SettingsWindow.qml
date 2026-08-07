@@ -29,23 +29,24 @@ ApplicationWindow {
         severityMinor.checked = cfg.severities.minor
         severityModerate.checked = cfg.severities.moderate
         severitySevere.checked = cfg.severities.severe
+        ignoreFirstAlertScan.checked = cfg.other.ignoreFirstScan
         loadLocationCodes()
     }
 
     function loadLocationCodes() {
         sameCodeModel.clear()
-        capcpCodeModel.clear()
+        cityCodeModel.clear()
         var sameCsv = config.getSameCodes()
         if (sameCsv !== "") {
             var sameArr = sameCsv.split(",")
             for (var i = 0; i < sameArr.length; i++)
                 sameCodeModel.append({ "code": sameArr[i].trim() })
         }
-        var capcpCsv = config.getCapcpCodes()
-        if (capcpCsv !== "") {
-            var capcpArr = capcpCsv.split(",")
-            for (var j = 0; j < capcpArr.length; j++)
-                capcpCodeModel.append({ "code": capcpArr[j].trim() })
+        var cityCsv = config.getCities()
+        if (cityCsv !== "") {
+            var cityArr = cityCsv.split(",")
+            for (var k = 0; k < cityArr.length; k++)
+                cityCodeModel.append({ "city": cityArr[k].trim() })
         }
     }
 
@@ -61,14 +62,33 @@ ApplicationWindow {
         cfg.severities.minor = severityMinor.checked
         cfg.severities.moderate = severityModerate.checked
         cfg.severities.severe = severitySevere.checked
+        cfg.other.ignoreFirstScan = ignoreFirstAlertScan.checked
         var sameArr = []
         for (var i = 0; i < sameCodeModel.count; i++)
             sameArr.push(sameCodeModel.get(i).code)
         config.setSameCodes(sameArr.join(","))
-        var capcpArr = []
-        for (var j = 0; j < capcpCodeModel.count; j++)
-            capcpArr.push(capcpCodeModel.get(j).code)
-        config.setCapcpCodes(capcpArr.join(","))
+        var cityArr = []
+        for (var l = 0; l < cityCodeModel.count; l++)
+            cityArr.push(cityCodeModel.get(l).city)
+        config.setCities(cityArr.join(","))
+    }
+
+    function addCity() {
+        var city = cityInput.text.trim()
+        if (city.length === 0) return
+        var res = config.resolveCity(city)
+        var parts = res.split("|")
+        if (parts[0] === "OK") {
+            var coords = parts[2] ? " (" + parts[2] + ")" : ""
+            cityStatus.text = "Found: " + parts[1] + coords
+            cityStatus.color = "#4CAF50"
+            cityCodeModel.append({ "city": city })
+            cityInput.text = ""
+            cityInput.forceActiveFocus()
+        } else {
+            cityStatus.text = "Could not resolve: " + (parts[1] || city)
+            cityStatus.color = "#E57373"
+        }
     }
 
     property string _pendingPathTarget: ""
@@ -160,20 +180,24 @@ ApplicationWindow {
 
                     ColumnLayout {
                         spacing: 6
-                        Label { text: "CAP-CP Location (Canada)"; font.bold: true }
-                        Label { text: "Province/area code (e.g. ON for Ontario)"; font.pixelSize: 11; color: "#888" }
+                        Label { text: "Cities (Canada)"; font.bold: true }
+                        Label { text: "City name, resolved to its area (e.g. Toronto)"; font.pixelSize: 11; color: "#888" }
                         RowLayout {
                             spacing: 8
-                            TextField { id: capcpCodeInput; placeholderText: "ON"; Layout.preferredWidth: 140 }
-                            Button { text: "Add"; onClicked: { var code = capcpCodeInput.text.trim(); if (code.length === 0) return; capcpCodeModel.append({ "code": code }); capcpCodeInput.text = "" } }
+                            TextField {
+                                id: cityInput; placeholderText: "Toronto"; Layout.preferredWidth: 140
+                                onAccepted: addCityButton.clicked()
+                            }
+                            Button { id: addCityButton; text: "Add"; onClicked: addCity() }
                         }
+                        Label { id: cityStatus; text: ""; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                         Rectangle {
                             Layout.fillWidth: true; height: 100; color: "#2a2a2a"; border.color: "#ccc"; border.width: 1; radius: 4
                             ListView {
-                                id: capcpCodeList; anchors.fill: parent; anchors.margins: 4; clip: true; model: ListModel { id: capcpCodeModel }
-                                delegate: RowLayout { width: capcpCodeList.width; spacing: 8
-                                    Label { text: code; font.family: "monospace"; Layout.fillWidth: true }
-                                    Button { text: "×"; flat: true; onClicked: capcpCodeModel.remove(index) }
+                                id: cityCodeList; anchors.fill: parent; anchors.margins: 4; clip: true; model: ListModel { id: cityCodeModel }
+                                delegate: RowLayout { width: cityCodeList.width; spacing: 8
+                                    Label { text: city; Layout.fillWidth: true }
+                                    Button { text: "×"; flat: true; onClicked: cityCodeModel.remove(index) }
                                 }
                             }
                         }
@@ -189,7 +213,7 @@ ApplicationWindow {
                 ColumnLayout {
                     anchors.fill: parent
                     spacing: 10
-                    Label { text: "Set a notification colour for each severity level."; font.pixelSize: 11; color: "#888" }
+                    Label { text: "Set a colour for each severity level."; font.pixelSize: 11; color: "#888" }
 
                     RowLayout {
                         spacing: 12
@@ -235,6 +259,19 @@ ApplicationWindow {
                     CheckBox { id: severityMinor; text: "Minor"; checked: true }
                     CheckBox { id: severityModerate; text: "Moderate"; checked: true }
                     CheckBox { id: severitySevere; text: "Severe"; checked: true }
+                }
+            }
+
+            GroupBox {
+                title: "Other Settings"
+                Layout.fillWidth: true
+                Layout.margins: 12
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    spacing: 10
+                    CheckBox { id: ignoreFirstAlertScan; text: "Ignore Pre-Existing Alerts"; checked: false }
+                    Label { text: "Hides alerts that were issued before the app started"; font.pixelSize: 11; color: "#888"; Layout.leftMargin: 24 }
                 }
             }
 
