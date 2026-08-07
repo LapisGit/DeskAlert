@@ -23,3 +23,14 @@ Made with C# and Qt 6.
 <img width="522" height="460" alt="image" src="https://github.com/user-attachments/assets/f2adfd81-3c0f-4748-a996-2393d210ffe1" />
 
 <img width="522" height="460" alt="image" src="https://github.com/user-attachments/assets/b0ef3eaa-91dd-49c4-900a-c5046dbfc9ba" />
+
+# Development
+
+1. Clone the repository:
+
+```
+git clone https://github.com/LapisGit/DeskAlert.git
+cd DeskAlert
+```
+
+2. Build the app using the corresponding script file in the `scripts` folder.
