@@ -16,18 +16,13 @@ $QtArch    = if ($env:QT_ARCH) { $env:QT_ARCH } else { "win64_msvc2019_64" }
 $QtRoot    = if ($env:QT_ROOT_DIR) { $env:QT_ROOT_DIR } else { "C:\Qt" }
 
 function Ensure-PythonPip {
-  Write-Host "Ensuring Python/pip"
   $py = Get-Command py -ErrorAction SilentlyContinue
-  if (-not $py) {
-    Write-Error "Python launcher 'py' not found. Install Python 3 on runner."
-  }
+  if (-not $py) { Write-Error "Python launcher 'py' not found." }
 
   & py -3 -m pip --version | Out-Null
   if ($LASTEXITCODE -ne 0) {
     & py -3 -m ensurepip --upgrade
-    if ($LASTEXITCODE -ne 0) {
-      Write-Error "Failed to bootstrap pip."
-    }
+    if ($LASTEXITCODE -ne 0) { Write-Error "Failed to bootstrap pip." }
   }
 
   & py -3 -m pip install --upgrade pip
@@ -35,7 +30,6 @@ function Ensure-PythonPip {
 }
 
 function Ensure-AqtInstall {
-  Write-Host "Ensuring aqtinstall"
   & py -3 -m pip install --upgrade aqtinstall
   if ($LASTEXITCODE -ne 0) { Write-Error "Failed to install aqtinstall." }
 }
@@ -44,15 +38,10 @@ function Ensure-QtInstalled {
   $qtBin = Join-Path $QtRoot "$QtVersion\msvc2019_64\bin"
   $windeployqt = Join-Path $qtBin "windeployqt.exe"
 
-  if (Test-Path $windeployqt) {
-    Write-Host "Qt already present: $windeployqt"
-    return $windeployqt
-  }
-
-  Write-Host "Installing Qt $QtVersion ($QtArch) to $QtRoot"
-  & py -3 -m aqt install-qt $QtHost $QtTarget $QtVersion $QtArch -O $QtRoot -m qtmultimedia
-  if ($LASTEXITCODE -ne 0) {
-    Write-Error "aqt install-qt failed."
+  if (-not (Test-Path $windeployqt)) {
+    Write-Host "Installing Qt $QtVersion ($QtArch) to $QtRoot"
+    & py -3 -m aqt install-qt $QtHost $QtTarget $QtVersion $QtArch -O $QtRoot -m qtmultimedia
+    if ($LASTEXITCODE -ne 0) { Write-Error "aqt install-qt failed." }
   }
 
   if (-not (Test-Path $windeployqt)) {
@@ -60,6 +49,26 @@ function Ensure-QtInstalled {
   }
 
   return $windeployqt
+}
+
+function Resolve-QmlDir {
+  $candidates = @(
+    (Join-Path $ProjectDir "Application"),
+    (Join-Path $ProjectDir "src\Application")
+  )
+
+  foreach ($c in $candidates) {
+    if ((Test-Path $c) -and (Test-Path (Join-Path $c "Main.qml"))) {
+      return $c
+    }
+  }
+
+  $mainQml = Get-ChildItem -Path $ProjectDir -Recurse -Filter Main.qml -File -ErrorAction SilentlyContinue |
+    Select-Object -First 1
+
+  if ($mainQml) { return $mainQml.DirectoryName }
+
+  Write-Error "Could not locate QML directory (Main.qml)."
 }
 
 Write-Host "Publishing"
@@ -71,12 +80,14 @@ if (-not (Test-Path $Exe)) { Write-Error "Executable not found: $Exe" }
 Ensure-PythonPip
 Ensure-AqtInstall
 $WinDeployQt = Ensure-QtInstalled
+$QmlDir = Resolve-QmlDir
 
 $qtBinDir = Split-Path -Parent $WinDeployQt
 $env:PATH = "$qtBinDir;$env:PATH"
 
+Write-Host "Using QML dir: $QmlDir"
 Write-Host "Deploying Qt runtime with: $WinDeployQt"
-& $WinDeployQt --qmldir (Join-Path $ProjectDir "Application") $Exe
+& $WinDeployQt --qmldir $QmlDir $Exe
 if ($LASTEXITCODE -ne 0) { Write-Error "windeployqt failed." }
 
 Write-Host "Packaging"
