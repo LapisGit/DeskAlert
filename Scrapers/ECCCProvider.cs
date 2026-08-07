@@ -44,10 +44,10 @@ public class EcccProvider
 
             results.Add(new NwsAlertItem
             {
-                Title = alertName,
+                Title = alertName.ToUpper(),
                 Updated = GetString(props, "publication_datetime"),
                 Link = GetAlertId(feature),
-                EventType = alertName,
+                EventType = alertName.ToUpper(),
                 Description = GetString(props, "alert_text_en"),
                 Severity = MapSeverity(GetString(props, "alert_type")),
                 Expires = GetString(props, "expiration_datetime") ?? "",
