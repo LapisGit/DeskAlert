@@ -18,6 +18,9 @@ public class EcccProvider
 
         List<NwsAlertItem> results = new();
 
+        if (cityBoxes.Count == 0)
+            return results;
+
         using var doc = JsonDocument.Parse(DownloadString(AlertApiUrl));
         if (!doc.RootElement.TryGetProperty("features", out JsonElement features))
             return results;
@@ -27,12 +30,9 @@ public class EcccProvider
             if (!feature.TryGetProperty("properties", out JsonElement props))
                 continue;
 
-            if (cityBoxes.Count > 0)
-            {
-                var alertBbox = GetFeatureBbox(feature);
-                if (alertBbox == null || !OverlapsAnyCity(alertBbox.Value, cityBoxes))
-                    continue;
-            }
+            var alertBbox = GetFeatureBbox(feature);
+            if (alertBbox == null || !OverlapsAnyCity(alertBbox.Value, cityBoxes))
+                continue;
 
             string? status = GetString(props, "status_en");
             if (string.Equals(status, "ended", StringComparison.OrdinalIgnoreCase))

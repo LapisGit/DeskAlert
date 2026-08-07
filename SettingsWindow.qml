@@ -6,6 +6,16 @@ import Application
 
 ApplicationWindow {
     id: settingsRoot
+    
+    palette {
+        window: "#1e1e1e"
+        windowText: "#ffffff"
+        base: "#2a2a2a"
+        text: "#ffffff"
+        button: "#333333"
+        buttonText: "#ffffff"
+    }
+    
     visible: false
     title: "Options"
     width: 350; height: 520
@@ -113,7 +123,19 @@ ApplicationWindow {
                     RowLayout {
                         spacing: 12
                         Label { text: "Sound playback:"; Layout.alignment: Qt.AlignVCenter }
-                        ComboBox { id: soundEnabledCombo; model: ["Enabled", "Disabled"]; currentIndex: 0; Layout.preferredWidth: 160 }
+                        ComboBox {
+                            id: soundEnabledCombo
+                            model: ["Enabled", "Disabled"]
+                            currentIndex: 0
+                            Layout.preferredWidth: 160
+                        
+                            contentItem: Text {
+                                text: soundEnabledCombo.displayText
+                                color: "black"
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 8
+                            }
+                        }
                     }
 
                     RowLayout {
@@ -121,8 +143,21 @@ ApplicationWindow {
                         visible: soundEnabledCombo.currentIndex === 0
                         Layout.fillWidth: true
                         Label { text: "Minor:"; Layout.preferredWidth: 60 }
-                        TextField { id: minorSoundPath; placeholderText: "/path/to/minor.wav"; Layout.fillWidth: true; readOnly: true }
-                        Button { text: "Browse..."; onClicked: { _pendingPathTarget = "minor"; soundFileDialog.open() } }
+                        TextField { id: minorSoundPath; placeholderText: ""; Layout.fillWidth: true; readOnly: true }
+                        Button {
+                            text: "Browse..."
+                            onClicked: {
+                                _pendingPathTarget = "minor"
+                                soundFileDialog.open()
+                            }
+                        
+                            contentItem: Text {
+                                text: parent.text
+                                color: "black"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
                     }
 
                     RowLayout {
@@ -130,8 +165,21 @@ ApplicationWindow {
                         visible: soundEnabledCombo.currentIndex === 0
                         Layout.fillWidth: true
                         Label { text: "Moderate:"; Layout.preferredWidth: 60 }
-                        TextField { id: moderateSoundPath; placeholderText: "/path/to/moderate.wav"; Layout.fillWidth: true; readOnly: true }
-                        Button { text: "Browse..."; onClicked: { _pendingPathTarget = "moderate"; soundFileDialog.open() } }
+                        TextField { id: moderateSoundPath; placeholderText: ""; Layout.fillWidth: true; readOnly: true }
+                        Button {
+                            text: "Browse..."
+                            onClicked: {
+                                _pendingPathTarget = "moderate"
+                                soundFileDialog.open()
+                            }
+                        
+                            contentItem: Text {
+                                text: parent.text
+                                color: "black"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
                     }
 
                     RowLayout {
@@ -139,8 +187,21 @@ ApplicationWindow {
                         visible: soundEnabledCombo.currentIndex === 0
                         Layout.fillWidth: true
                         Label { text: "Severe:"; Layout.preferredWidth: 60 }
-                        TextField { id: severeSoundPath; placeholderText: "/path/to/severe.wav"; Layout.fillWidth: true; readOnly: true }
-                        Button { text: "Browse..."; onClicked: { _pendingPathTarget = "severe"; soundFileDialog.open() } }
+                        TextField { id: severeSoundPath; placeholderText: ""; Layout.fillWidth: true; readOnly: true; palette.base: "#2a2a2a"; palette.text: "#ffffff" }
+                        Button {
+                            text: "Browse..."
+                            onClicked: {
+                                _pendingPathTarget = "severe"
+                                soundFileDialog.open()
+                            }
+                        
+                            contentItem: Text {
+                                text: parent.text
+                                color: "black"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
                     }
                 }
             }
@@ -161,10 +222,22 @@ ApplicationWindow {
                         RowLayout {
                             spacing: 8
                             TextField {
-                                id: sameCodeInput; placeholderText: "029037"; Layout.preferredWidth: 140
+                                id: sameCodeInput; placeholderText: ""; Layout.preferredWidth: 140
                                 validator: RegularExpressionValidator { regularExpression: /^[0-9]{6}$/ }
                             }
-                            Button { text: "Add"; onClicked: { var code = sameCodeInput.text.trim(); if (code.length === 0) return; sameCodeModel.append({ "code": code }); sameCodeInput.text = "" } }
+                            Button {
+                                text: "Add"
+                                palette.buttonText: "black"
+                            
+                                onClicked: {
+                                    var code = sameCodeInput.text.trim()
+                                    if (code.length === 0)
+                                        return
+                            
+                                    sameCodeModel.append({ "code": code })
+                                    sameCodeInput.text = ""
+                                }
+                            }
                         }
                         Rectangle {
                             Layout.fillWidth: true; height: 100; color: "#2a2a2a"; border.color: "#ccc"; border.width: 1; radius: 4
@@ -185,10 +258,17 @@ ApplicationWindow {
                         RowLayout {
                             spacing: 8
                             TextField {
-                                id: cityInput; placeholderText: "Toronto"; Layout.preferredWidth: 140
+                                id: cityInput; placeholderText: ""; Layout.preferredWidth: 140
                                 onAccepted: addCityButton.clicked()
+                                palette.base: "#2a2a2a"; palette.text: "#ffffff"
                             }
-                            Button { id: addCityButton; text: "Add"; onClicked: addCity() }
+                            Button {
+                                id: addCityButton
+                                text: "Add"
+                                palette.buttonText: "black"
+                            
+                                onClicked: addCity()
+                            }
                         }
                         Label { id: cityStatus; text: ""; font.pixelSize: 11; wrapMode: Text.WordWrap; Layout.fillWidth: true }
                         Rectangle {
@@ -279,8 +359,26 @@ ApplicationWindow {
                 Layout.alignment: Qt.AlignRight
                 Layout.margins: 12
                 spacing: 10
-                Button { text: "Reset Defaults"; onClicked: { console.log("Reset to defaults") } }
-                Button { text: "Save"; highlighted: true; onClicked: { applyToConfig(); config.save(); console.log("Settings saved") } }
+                Button {
+                    text: "Reset Defaults"
+                    palette.buttonText: "black"
+                
+                    onClicked: {
+                        console.log("Reset to defaults")
+                    }
+                }
+                
+                Button {
+                    text: "Save"
+                    highlighted: true
+                    palette.buttonText: "black"
+                
+                    onClicked: {
+                        applyToConfig()
+                        config.save()
+                        console.log("Settings saved")
+                    }
+                }
             }
 
             Item { Layout.fillHeight: true }

@@ -5,58 +5,84 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    
-    <QtDir Condition="$([MSBuild]::IsOSPlatform('Linux'))">/home/lapis/Qt/6.11.1/gcc_64/</QtDir>
+
+    <QtQmlModuleName>DeskAlert</QtQmlModuleName>
   </PropertyGroup>
 
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
-    <PackageReference Include="QtGroup.Qt.Bridge.CSharp.win-x64" Version="0.3.*-*" />
-  </ItemGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <QtDir>E:\Qt-new\6.11.1\msvc2022_64\</QtDir>
+    <QtBridgePackage>QtGroup.Qt.Bridge.CSharp.win-x64</QtBridgePackage>
+  </PropertyGroup>
 
-  <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
-    <PackageReference Include="QtGroup.Qt.Bridge.CSharp.linux-x64" Version="0.3.*-*" />
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <QtDir>/home/lapis/Qt/6.11.1/gcc_64/</QtDir>
+    <QtBridgePackage>QtGroup.Qt.Bridge.CSharp.linux-x64</QtBridgePackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="$(QtBridgePackage)" Version="0.3.*-*" />
   </ItemGroup>
 
   <ItemGroup>
     <QtResource Include="defaultconfig.json" />
   </ItemGroup>
 
-  <UsingTask TaskName="QtPatchMainCpp"
-             TaskFactory="RoslynCodeTaskFactory"
-             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+  <UsingTask
+          TaskName="QtPatchMainCpp"
+          TaskFactory="RoslynCodeTaskFactory"
+          AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+
     <ParameterGroup>
       <MainCppPath ParameterType="System.String" Required="true" />
     </ParameterGroup>
+
     <Task>
       <Using Namespace="System.IO" />
       <Code Type="Fragment" Language="cs"><![CDATA[
-        if (File.Exists(MainCppPath)) {
-          var content = File.ReadAllText(MainCppPath);
-          const string anchor = "    QGuiApplication app(argc, argv);";
-          if (content.Contains(anchor) && !content.Contains("setQuitOnLastWindowClosed")) {
-            var nl = content.Contains("\r\n") ? "\r\n" : "\n";
-            var patched = content.Replace(anchor,
-                anchor + nl + "    app.setQuitOnLastWindowClosed(false);");
-            File.WriteAllText(MainCppPath, patched);
-          }
+        if (File.Exists(MainCppPath))
+        {
+            var content = File.ReadAllText(MainCppPath);
+
+            const string anchor = "    QGuiApplication app(argc, argv);";
+
+            if (content.Contains(anchor) &&
+                !content.Contains("setQuitOnLastWindowClosed"))
+            {
+                var nl = content.Contains("\r\n") ? "\r\n" : "\n";
+
+                content = content.Replace(
+                    anchor,
+                    anchor + nl +
+                    "    app.setQuitOnLastWindowClosed(false);");
+
+                File.WriteAllText(MainCppPath, content);
+            }
         }
       ]]></Code>
     </Task>
+
   </UsingTask>
 
-  <Target Name="DeskAlertDeployIcon" AfterTargets="QtBridgeDeploy" Condition="'$(DesignTimeBuild)' != 'true'">
-    <Copy SourceFiles="$(ProjectDir)icon.png" DestinationFolder="$(TargetDir)Application" />
-  </Target>
-  
-  <Target Name="QtDisableQuitOnLastWindowClosed"
+  <Target
+          Name="QtDisableQuitOnLastWindowClosed"
           AfterTargets="QtBridgeGenerate"
           BeforeTargets="QtBridgeBuild"
           Condition="'$(DesignTimeBuild)' != 'true'">
-    <QtPatchMainCpp MainCppPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)qt/native/source/cpp/main.cpp" />
+
+    <QtPatchMainCpp
+            MainCppPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)qt/native/source/cpp/main.cpp" />
+
   </Target>
 
-  <PropertyGroup>
-    <QtQmlModuleName>DeskAlert</QtQmlModuleName>
-  </PropertyGroup>
+  <Target
+          Name="DeskAlertDeployIcon"
+          AfterTargets="QtBridgeDeploy"
+          Condition="'$(DesignTimeBuild)' != 'true'">
+
+    <Copy
+            SourceFiles="$(ProjectDir)icon.png"
+            DestinationFolder="$(TargetDir)Application" />
+
+  </Target>
 
 </Project>

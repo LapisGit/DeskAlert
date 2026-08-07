@@ -5,7 +5,12 @@ import QtMultimedia
 
 ApplicationWindow {
     id: alertRoot
-
+    palette {
+        buttonText: "black"
+        text: "white"
+        windowText: "white"
+        base: "#2a2a2a"
+    }
     property string alertTitle: ""
     property string alertDescription: ""
     property string alertColor: "#FF0000"
@@ -22,7 +27,16 @@ ApplicationWindow {
 
     onVisibleChanged: {
         if (visible && alertSoundPath !== "") {
-            alertPlayer.source = "file://" + alertSoundPath
+            var normalizedPath = alertSoundPath.replace(/\\/g, "/")
+            var fileUrl
+            if (normalizedPath.match(/^[a-zA-Z]:/)) {
+                fileUrl = "file:///" + normalizedPath
+            } else if (normalizedPath.charAt(0) === "/") {
+                fileUrl = "file://" + normalizedPath
+            } else {
+                fileUrl = "file:///" + normalizedPath
+            }
+            alertPlayer.source = fileUrl
             alertPlayer.play()
         }
     }
@@ -57,7 +71,21 @@ ApplicationWindow {
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-
+        
+            ScrollBar.vertical: ScrollBar {
+                width: 10
+        
+                contentItem: Rectangle {
+                    implicitWidth: 10
+                    radius: 5
+                    color: "#666666"
+                }
+        
+                background: Rectangle {
+                    color: "#1e1e1e"
+                }
+            }
+        
             Text {
                 width: parent.width
                 text: alertRoot.alertDescription
