@@ -33,4 +33,8 @@ git clone https://github.com/LapisGit/DeskAlert.git
 cd DeskAlert
 ```
 
-2. Build the app using the corresponding script file in the `scripts` folder.
+2. Set your Qt for Development path in the .csproj
+
+3. Build the app.
+
+`dotnet build`
