@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <QtDir>E:\Qt-new\6.11.1\msvc2022_64\</QtDir>
     <QtBridgePackage>QtGroup.Qt.Bridge.CSharp.win-x64</QtBridgePackage>
   </PropertyGroup>
