@@ -1,6 +1,6 @@
 <div align="center">
-
-<img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/40ea6b88-acd4-4ea3-9da6-467ef5018428" />
+  
+<img width="256" height="256" alt="icon" src="https://github.com/user-attachments/assets/a4d020d2-dfdf-4547-a297-ded240ef3950" />
 
 # DeskAlert
 
