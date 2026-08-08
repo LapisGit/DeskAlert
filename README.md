@@ -26,6 +26,13 @@ Made with C# and Qt 6.
 
 # Development
 
+## Prerequisites
+
+1. .NET 8 (https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+2. Qt 6 for Development (https://www.qt.io/development/qt-framework/qt6)
+
+## Local build instructions
+
 1. Clone the repository:
 
 ```
@@ -37,4 +44,13 @@ cd DeskAlert
 
 3. Build the app.
 
-`dotnet build`
+```
+dotnet build
+```
+
+4. Run the app.
+
+```
+dotnet run
+```
+
